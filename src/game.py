@@ -2,13 +2,21 @@ import random
 from pydantic import BaseModel
 from typing import Optional
 from enum import Enum
+from colorama import Fore
 
 class CardColor(Enum):
-    RED = "Red"
-    GREEN = "Green"
-    BLUE = "Blue"
-    YELLOW = "Yellow"
-    BLACK = "Black"
+    RED = "RED"
+    GREEN = "GREEN"
+    BLUE = "BLUE"
+    YELLOW = "YELLOW"
+    BLACK = "BLACK"
+
+class ColorEnum(Enum):
+    RED = Fore.RED
+    GREEN = Fore.GREEN
+    BLUE = Fore.BLUE
+    YELLOW = Fore.YELLOW
+    BLACK = Fore.BLACK
 
 class CardValue(Enum):
     ZERO = "0"
@@ -69,15 +77,16 @@ class UnoGame:
             raise ValueError(f"{card.color} {card.value} cannot be played on top of {self.discard_pile[-1].color} {self.discard_pile[-1].value}.")
         self.discard_pile.append(card)
         self.players[self.current_player_index].hand.remove(card)
+        played = f"{self.players[self.current_player_index].name} played Card({ColorEnum[card.color].value}{card.value}{Fore.RESET})."
         self.current_player_index =  (self.current_player_index + 1) % len(self.players)
-        return f"{self.players[self.current_player_index].name} played {card.color} {card.value}. {self.players[self.current_player_index].name}'s turn next."
+        return played + f" {self.players[self.current_player_index].name}'s turn next."
 
     def draw_card(self):
         if not self.deck:
             raise ValueError("The deck is empty, cannot draw a card.")
         drawn_card = self.deck.pop()
         self.players[self.current_player_index].hand.append(drawn_card)
-        return f"{self.players[self.current_player_index].name} drew a card: {drawn_card.color} {drawn_card.value}."
+        return f"{self.players[self.current_player_index].name} drew a card: Card({ColorEnum[drawn_card.color].value}{drawn_card.value}{Fore.RESET})"
 
     def check_winner(self) -> Optional[str]:
         for player in self.players:
@@ -86,7 +95,6 @@ class UnoGame:
         return None
 
 if __name__ == "__main__":
-    from colorama import Fore
     game = UnoGame([Player(name="Alice"), Player(name="Bob")])
     game.deal_cards()
     print("Game started with players:")
@@ -94,19 +102,19 @@ if __name__ == "__main__":
         print(f"\n================== {game.players[game.current_player_index].name}'s turn ==================")
         for player in game.players:
             print(f"{player.name} has {len(player.hand)} cards.")
-        print(f"Top card on discard pile: Card({game.discard_pile[-1].color}, {game.discard_pile[-1].value})")
+        print(f"Top card on discard pile: Card({ColorEnum[game.discard_pile[-1].color].value}{game.discard_pile[-1].value}{Fore.RESET})")
         print("Current hand:")
         for card in game.players[game.current_player_index].hand:
-            print(f"\t- Card({card.color}, {card.value})")
+            print(f"\t- Card({ColorEnum[card.color].value}{card.value}{Fore.RESET})")
         while True:
             try:
                 index = input(f"{game.players[game.current_player_index].name}, press Card index to play a card (0 to {len(game.players[game.current_player_index].hand) - 1}) or draw: ")
                 if index.lower() == 'draw':
-                    print(Fore.GREEN + game.draw_card() + Fore.RESET)
+                    print(game.draw_card())
                     continue
                 card_to_play = game.players[game.current_player_index].hand[int(index)]  # For simplicity, play the first card
-                print(Fore.YELLOW + f"Attempting to play: Card({card_to_play.color}, {card_to_play.value})" + Fore.RESET)
-                print(Fore.GREEN + game.play_card(card_to_play) + Fore.RESET)
+                print(f"Attempting to play: Card({ColorEnum[card.color].value}{card.value}{Fore.RESET})")
+                print(game.play_card(card_to_play))
                 break
             except ValueError as e:
                 print(Fore.RED + str(e) + Fore.RESET)
