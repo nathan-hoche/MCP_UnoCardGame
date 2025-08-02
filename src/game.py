@@ -72,6 +72,13 @@ class UnoGame:
         self.current_player_index =  (self.current_player_index + 1) % len(self.players)
         return f"{self.players[self.current_player_index].name} played {card.color} {card.value}. {self.players[self.current_player_index].name}'s turn next."
 
+    def draw_card(self):
+        if not self.deck:
+            raise ValueError("The deck is empty, cannot draw a card.")
+        drawn_card = self.deck.pop()
+        self.players[self.current_player_index].hand.append(drawn_card)
+        return f"{self.players[self.current_player_index].name} drew a card: {drawn_card.color} {drawn_card.value}."
+
     def check_winner(self) -> Optional[str]:
         for player in self.players:
             if not player.hand:
@@ -93,7 +100,10 @@ if __name__ == "__main__":
             print(f"\t- Card({card.color}, {card.value})")
         while True:
             try:
-                index = input(f"{game.players[game.current_player_index].name}, press Card index to play a card (0 to {len(game.players[game.current_player_index].hand) - 1}): ")
+                index = input(f"{game.players[game.current_player_index].name}, press Card index to play a card (0 to {len(game.players[game.current_player_index].hand) - 1}) or draw: ")
+                if index.lower() == 'draw':
+                    print(Fore.GREEN + game.draw_card() + Fore.RESET)
+                    continue
                 card_to_play = game.players[game.current_player_index].hand[int(index)]  # For simplicity, play the first card
                 print(Fore.YELLOW + f"Attempting to play: Card({card_to_play.color}, {card_to_play.value})" + Fore.RESET)
                 print(Fore.GREEN + game.play_card(card_to_play) + Fore.RESET)
