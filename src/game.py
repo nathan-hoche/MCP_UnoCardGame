@@ -60,17 +60,44 @@ class UnoGame:
         random.shuffle(self.deck)
         for player in self.players:
             player.hand = [self.deck.pop() for _ in range(7)]
+        self.discard_pile.append(self.deck.pop())
     
-    def play_card(self, card):
-        # Logic for playing a card
-        pass
+    def play_card(self, card: Card):
+        if card not in self.players[self.current_player_index].hand:
+            raise ValueError(f"{card.color} {card.value} is not in {self.players[self.current_player_index].name}'s hand.")
+        if card.color != self.discard_pile[-1].color and card.value != self.discard_pile[-1].value:
+            raise ValueError(f"{card.color} {card.value} cannot be played on top of {self.discard_pile[-1].color} {self.discard_pile[-1].value}.")
+        self.discard_pile.append(card)
+        self.players[self.current_player_index].hand.remove(card)
+        self.current_player_index =  (self.current_player_index + 1) % len(self.players)
+        return f"{self.players[self.current_player_index].name} played {card.color} {card.value}. {self.players[self.current_player_index].name}'s turn next."
 
-    def next_player(self):
-        # Logic to switch to the next player
-        pass
+    def check_winner(self) -> Optional[str]:
+        for player in self.players:
+            if not player.hand:
+                return f"{player.name} wins!"
+        return None
 
 if __name__ == "__main__":
+    from colorama import Fore
     game = UnoGame([Player(name="Alice"), Player(name="Bob")])
-    print(game.players)
     game.deal_cards()
-    print(game.players)
+    print("Game started with players:")
+    while game.check_winner() is None:
+        print(f"\n================== {game.players[game.current_player_index].name}'s turn ==================")
+        for player in game.players:
+            print(f"{player.name} has {len(player.hand)} cards.")
+        print(f"Top card on discard pile: Card({game.discard_pile[-1].color}, {game.discard_pile[-1].value})")
+        print("Current hand:")
+        for card in game.players[game.current_player_index].hand:
+            print(f"\t- Card({card.color}, {card.value})")
+        while True:
+            try:
+                index = input(f"{game.players[game.current_player_index].name}, press Card index to play a card (0 to {len(game.players[game.current_player_index].hand) - 1}): ")
+                card_to_play = game.players[game.current_player_index].hand[int(index)]  # For simplicity, play the first card
+                print(Fore.YELLOW + f"Attempting to play: Card({card_to_play.color}, {card_to_play.value})" + Fore.RESET)
+                print(Fore.GREEN + game.play_card(card_to_play) + Fore.RESET)
+                break
+            except ValueError as e:
+                print(Fore.RED + str(e) + Fore.RESET)
+
