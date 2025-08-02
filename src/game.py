@@ -70,16 +70,38 @@ class UnoGame:
             player.hand = [self.deck.pop() for _ in range(7)]
         self.discard_pile.append(self.deck.pop())
     
-    def play_card(self, card: Card):
+    def play_card(self, card: Card, color_choice: Optional[str] = None) -> str:
         if card not in self.players[self.current_player_index].hand:
             raise ValueError(f"{card.color} {card.value} is not in {self.players[self.current_player_index].name}'s hand.")
-        if card.color != self.discard_pile[-1].color and card.value != self.discard_pile[-1].value:
+        if card.color != CardColor.BLACK.value and card.color != self.discard_pile[-1].color and card.value != self.discard_pile[-1].value:
             raise ValueError(f"{card.color} {card.value} cannot be played on top of {self.discard_pile[-1].color} {self.discard_pile[-1].value}.")
-        self.discard_pile.append(card)
+        
         self.players[self.current_player_index].hand.remove(card)
+        if card.color == CardColor.BLACK.value:
+            if color_choice is None or color_choice not in ColorEnum.__members__:
+                raise ValueError("A color must be chosen when playing a Wild card.")
+            card.color = color_choice
+        self.discard_pile.append(card)
         played = f"{self.players[self.current_player_index].name} played Card({ColorEnum[card.color].value}{card.value}{Fore.RESET})."
+        self.card_effects(card)
         self.current_player_index =  (self.current_player_index + 1) % len(self.players)
         return played + f" {self.players[self.current_player_index].name}'s turn next."
+
+    def card_effects(self, card: Card):
+        if card.value == CardValue.DRAW_TWO.value or card.value == CardValue.WILD_DRAW_FOUR.value:
+            next_player_index = (self.current_player_index + 1) % len(self.players)
+            for _ in range(2 if card.value == CardValue.DRAW_TWO.value else 4):
+                if not self.deck:
+                    raise ValueError("The deck is empty, cannot draw a card.")
+                self.players[next_player_index].hand.append(self.deck.pop())
+                print(f"{self.players[next_player_index].name} drew a card: Card({ColorEnum[self.players[next_player_index].hand[-1].color].value}{self.players[next_player_index].hand[-1].value}{Fore.RESET})")
+        elif card.value == CardValue.REVERSE.value:
+            self.players.reverse()
+            self.current_player_index = (len(self.players) - 1) - self.current_player_index
+            print(f"Direction reversed! Now it's {self.players[self.current_player_index].name}'s turn.")
+        elif card.value == CardValue.SKIP.value:
+            self.current_player_index = (self.current_player_index + 1) % len(self.players)
+            print(f"{self.players[self.current_player_index].name} is skipped. Next player's turn.")
 
     def draw_card(self):
         if not self.deck:
@@ -113,8 +135,13 @@ if __name__ == "__main__":
                     print(game.draw_card())
                     continue
                 card_to_play = game.players[game.current_player_index].hand[int(index)]  # For simplicity, play the first card
-                print(f"Attempting to play: Card({ColorEnum[card.color].value}{card.value}{Fore.RESET})")
-                print(game.play_card(card_to_play))
+                color_choice = None
+                if card_to_play.color == CardColor.BLACK.value:
+                    color_choice = input("Choose a color (RED, GREEN, BLUE, YELLOW): ").upper()
+                    if color_choice not in ColorEnum.__members__:
+                        raise ValueError("Invalid color choice. Please choose from RED, GREEN, BLUE, YELLOW.")
+                print(f"Attempting to play: Card({ColorEnum[card_to_play.color].value}{card_to_play.value}{Fore.RESET})")
+                print(game.play_card(card_to_play, color_choice=color_choice))
                 break
             except ValueError as e:
                 print(Fore.RED + str(e) + Fore.RESET)
