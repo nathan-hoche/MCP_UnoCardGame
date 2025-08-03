@@ -64,10 +64,10 @@ class UnoGame:
                         deck.extend([Card(color=color.value, value=value.value) for _ in range(2)])
         return deck
 
-    def deal_cards(self):
+    def deal_cards(self, num_cards: int = 1):
         random.shuffle(self.deck)
         for player in self.players:
-            player.hand = [self.deck.pop() for _ in range(7)]
+            player.hand = [self.deck.pop() for _ in range(num_cards)]
         self.discard_pile.append(self.deck.pop())
     
     def play_card(self, card: Card, color_choice: Optional[str] = None) -> str:
@@ -117,6 +117,9 @@ class UnoGame:
         return None
 
 if __name__ == "__main__":
+    import os
+    os.system('clear')
+
     game = UnoGame([Player(name="Alice"), Player(name="Bob")])
     game.deal_cards()
     print("Game started with players:")
@@ -134,7 +137,7 @@ if __name__ == "__main__":
                 if index.lower() == 'draw':
                     print(game.draw_card())
                     continue
-                card_to_play = game.players[game.current_player_index].hand[int(index)]  # For simplicity, play the first card
+                card_to_play = game.players[game.current_player_index].hand[int(index)]
                 color_choice = None
                 if card_to_play.color == CardColor.BLACK.value:
                     color_choice = input("Choose a color (RED, GREEN, BLUE, YELLOW): ").upper()
@@ -145,4 +148,9 @@ if __name__ == "__main__":
                 break
             except ValueError as e:
                 print(Fore.RED + str(e) + Fore.RESET)
+            except IndexError as e:
+                print(Fore.RED + "Invalid Index" + Fore.RESET)
+        os.system('clear')
+    print(game.check_winner())
+    print("Game Over!")
 
