@@ -43,7 +43,7 @@ class Player(BaseModel):
     name: str
     hand: Optional[list[Card]] = []
 
-class UnoGame:
+class UnoGameLogic:
     def __init__(self, players: list[Player]):
         self.players = players
         self.current_player_index = 0
@@ -116,35 +116,58 @@ class UnoGame:
                 return f"{player.name} wins!"
         return None
 
+class UnoGame(UnoGameLogic):
+    def __init__(self, players: list[Player]):
+        super().__init__(players)
+        self.deal_cards(num_cards=7)
+    
+    def get_current_player_info(self, player_name:False) -> str:
+        res = ""
+        if player_name:
+            res += f"\n================== {self.players[self.current_player_index].name}'s turn ==================\n"
+        for player in self.players:
+            if self.players[self.current_player_index].name == player.name:
+                res += f"You have {len(player.hand)} cards.\n"
+            else:
+                res += f"{player.name} has {len(player.hand)} cards.\n"
+        res += f"Top card on discard pile: Card({ColorEnum[self.discard_pile[-1].color].value}{self.discard_pile[-1].value}{Fore.RESET})\n"
+        res += "Current hand:\n"
+        for card in self.players[self.current_player_index].hand:
+            res += f"\t- Card({ColorEnum[card.color].value}{card.value}{Fore.RESET})\n"
+        return res
+    
+    
+    def needs_color_choice(self, card_index: int) -> bool:
+        card_to_play = game.players[game.current_player_index].hand[int(card_index)]
+        if card_to_play.color == CardColor.BLACK.value:
+            return True
+        return False
+
+    def verif_and_play(self, card_index: int, color_choice: Optional[str] = None) -> None:
+        card_to_play = game.players[game.current_player_index].hand[int(card_index)]
+        if card_to_play.color == CardColor.BLACK.value:
+            if color_choice == None or color_choice not in ColorEnum.__members__:
+                raise ValueError("Invalid color choice. Please choose from RED, GREEN, BLUE, YELLOW.")
+        game.play_card(card_to_play, color_choice=color_choice)
+
+
 if __name__ == "__main__":
     import os
     os.system('clear')
 
     game = UnoGame([Player(name="Alice"), Player(name="Bob")])
-    game.deal_cards()
     print("Game started with players:")
     while game.check_winner() is None:
-        print(f"\n================== {game.players[game.current_player_index].name}'s turn ==================")
-        for player in game.players:
-            print(f"{player.name} has {len(player.hand)} cards.")
-        print(f"Top card on discard pile: Card({ColorEnum[game.discard_pile[-1].color].value}{game.discard_pile[-1].value}{Fore.RESET})")
-        print("Current hand:")
-        for card in game.players[game.current_player_index].hand:
-            print(f"\t- Card({ColorEnum[card.color].value}{card.value}{Fore.RESET})")
+        print(game.get_current_player_info(player_name=True))
         while True:
             try:
                 index = input(f"{game.players[game.current_player_index].name}, press Card index to play a card (0 to {len(game.players[game.current_player_index].hand) - 1}) or draw: ")
-                if index.lower() == 'draw':
-                    print(game.draw_card())
-                    continue
-                card_to_play = game.players[game.current_player_index].hand[int(index)]
-                color_choice = None
-                if card_to_play.color == CardColor.BLACK.value:
-                    color_choice = input("Choose a color (RED, GREEN, BLUE, YELLOW): ").upper()
-                    if color_choice not in ColorEnum.__members__:
-                        raise ValueError("Invalid color choice. Please choose from RED, GREEN, BLUE, YELLOW.")
-                print(f"Attempting to play: Card({ColorEnum[card_to_play.color].value}{card_to_play.value}{Fore.RESET})")
-                print(game.play_card(card_to_play, color_choice=color_choice))
+                if index.lower() == "draw":
+                    game.draw_card()
+                elif game.needs_color_choice(int(index)):
+                    game.verif_and_play(int(index), color_choice=input("Choose a color (RED, GREEN, BLUE, YELLOW): ").upper())
+                else:
+                    game.verif_and_play(int(index))
                 break
             except ValueError as e:
                 print(Fore.RED + str(e) + Fore.RESET)
