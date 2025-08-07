@@ -136,7 +136,6 @@ class UnoGame(UnoGameLogic):
             res += f"\t- Card({ColorEnum[card.color].value}{card.value}{Fore.RESET})\n"
         return res
     
-    
     def needs_color_choice(self, card_index: int) -> bool:
         card_to_play = game.players[game.current_player_index].hand[int(card_index)]
         if card_to_play.color == CardColor.BLACK.value:
