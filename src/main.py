@@ -13,9 +13,18 @@ def get_current_player_info() -> str:
     return game.get_current_player_info(player_name=False)
 
 @mcp.tool(description="Play a card from the current player's hand.")
-def play_card(card_index: Annotated[int, Field(description="Index of the card to play")], color_choice: Annotated[Optional[str], Field(description="Color choice if the card is a wild card (optional)")] = None) -> str:
+def play_card(card_color: Annotated[str, Field(description="Color of the Card to play (e.g. RED, GREEN, BLUE, YELLOW, BLACK)")],
+            card_value: Annotated[str, Field(description="Value of the Card to play (e.g. 0, 1, 2, ..., Skip, Reverse, Draw Two, Wild, Wild Draw Four)")],
+            color_choice: Annotated[Optional[str], Field(description="Color choice if the card is a wild card (optional)")] = None) -> str:
     """Play a card from the current player's hand."""
     try:
+        card_index = -1
+        for i, card in enumerate(game.players[game.current_player_index].hand):
+            if card.color == card_color and card.value == card_value:
+                card_index = i
+                break
+        if card_index == -1:
+            return "Error: Card not found in your hand."
         game.verif_and_play(card_index, color_choice)
         return "Card played successfully. End of your turn."
     except ValueError as e:
