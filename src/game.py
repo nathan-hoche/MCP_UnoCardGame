@@ -130,24 +130,24 @@ class UnoGame(UnoGameLogic):
                 res += f"You have {len(player.hand)} cards.\n"
             else:
                 res += f"{player.name} has {len(player.hand)} cards.\n"
-        res += f"Top card on discard pile: Card({ColorEnum[self.discard_pile[-1].color].value}{self.discard_pile[-1].value}{Fore.RESET})\n"
+        res += f"Top card on discard pile: Card({self.discard_pile[-1].color}, {self.discard_pile[-1].value})\n"
         res += "Current hand:\n"
         for card in self.players[self.current_player_index].hand:
-            res += f"\t- Card({ColorEnum[card.color].value}{card.value}{Fore.RESET})\n"
+            res += f"\t- Card({card.color}, {card.value})\n"
         return res
     
     def needs_color_choice(self, card_index: int) -> bool:
-        card_to_play = game.players[game.current_player_index].hand[int(card_index)]
+        card_to_play = self.players[self.current_player_index].hand[int(card_index)]
         if card_to_play.color == CardColor.BLACK.value:
             return True
         return False
 
     def verif_and_play(self, card_index: int, color_choice: Optional[str] = None) -> None:
-        card_to_play = game.players[game.current_player_index].hand[int(card_index)]
+        card_to_play = self.players[self.current_player_index].hand[int(card_index)]
         if card_to_play.color == CardColor.BLACK.value:
             if color_choice == None or color_choice not in ColorEnum.__members__:
                 raise ValueError("Invalid color choice. Please choose from RED, GREEN, BLUE, YELLOW.")
-        game.play_card(card_to_play, color_choice=color_choice)
+        self.play_card(card_to_play, color_choice=color_choice)
 
 
 if __name__ == "__main__":
