@@ -2,9 +2,7 @@
 
 # Introduction
 
-This project is a simple MCP to enable an LLM to Uno Card Game. It is designed to al
-> [!IMPORTANT]
-> This project is a small project to demonstrate the use of MCP with LLMs, it does not includlow a language model to play Uno with a user by providing a set of tools that the model can use to interact with the game.
+This project is a simple MCP to enable an LLM to Uno Card Game. It is designed to allow a language model to play Uno with a user by providing a set of tools that the model can use to interact with the game.
 
 > [!NOTE]
 > The game processing is handle by the MCP, so the user need to interact to play is turn using an MCP client. (e.g. `MCP Inspector`)
